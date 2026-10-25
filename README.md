@@ -1,89 +1,69 @@
-# ⚡ FluxDesk
+# ⚡ Project FluxDesk
 
 > **Dynamic Per-Virtual-Desktop Wallpaper Slideshow & Touchpad Preloader for Windows 11**
 
-**FluxDesk** is a lightweight, zero-dependency Windows 11 utility that automatically assigns, preloads, and rotates distinct wallpapers across all your Windows virtual desktops. 
+**FluxDesk** solves the notorious Windows 11 bug where switching virtual desktops with a **4-finger touchpad swipe** flashes a **blank or black screen**, ensuring every virtual workspace has its wallpaper cached and pre-rendered in Desktop Window Manager (DWM) for 60/120fps buttery-smooth swipe transitions.
 
-It solves the common Windows 11 bug where switching virtual desktops with a **4-finger touchpad swipe** flashes a **blank/black screen**, ensuring every virtual workspace has its wallpaper cached and pre-rendered in Desktop Window Manager (DWM) for 60/120fps smooth swipe transitions.
+This repository is split into two complementary implementations:
 
----
-
-## ✨ Features
-
-- 🖥️ **Unique Wallpapers Per Virtual Desktop**: Every virtual desktop gets its own distinct background image from your selected wallpaper folder.
-- ⚡ **Zero-Blank 4-Finger Touchpad Gestures**: Wallpapers are preloaded into Windows Explorer & DWM via native internal Shell COM interfaces (`IVirtualDesktopManagerInternal::SetDesktopWallpaper`), eliminating black screens and transition lag during touchpad swipes.
-- 🔄 **Dynamic Folder Slideshow**: Automatically rotates wallpapers on a configurable interval (1 min, 5 min, 10 min, 15 min, 30 min, 1 hour, or manual mode).
-- 📁 **Auto-Detection**: Automatically detects your Windows background slideshow folder or allows selecting any custom pictures folder.
-- 🔀 **Smart Duplicate Prevention**: Shuffles and distributes images so no two virtual desktops display the same wallpaper at the same time.
-- 🎮 **Wallpaper Engine Compatibility**: Detects active Wallpaper Engine processes and provides guidance to prevent wallpaper override conflicts.
-- 🎛️ **Modern Fluent Dark Dashboard**: Real-time thumbnail cards for each virtual desktop, active desktop indicator, one-click manual rotation, and single-desktop re-rolls.
-- 🔔 **System Tray Integration**: Runs silently in the background, minimizing to the system tray with quick-access context menu controls.
-- 🚀 **Zero External Dependencies**: Pure native C# / WPF compiled into a standalone 47 KB executable using Windows' built-in .NET compiler (`csc.exe`). No Node, Python, or external runtimes required.
+1. 🖥️ **[`/desktop-app`](desktop-app/)**: The standalone, zero-dependency C# / WPF desktop application with a Fluent dark dashboard, system tray menu, and slideshow engine. (Reference implementation).
+2. 🦅 **[`/windhawk-mod`](windhawk-mod/)**: The high-performance native C++ mod injected directly into `explorer.exe` via the [Windhawk](https://windhawk.net/) modding engine for zero RAM overhead and instant shell-level event response.
 
 ---
 
-## 🛠️ Architecture
+## 🗂️ Repository Architecture
 
 ```
 FluxDesk/
-├── src/
-│   ├── NativeMethods.cs        # Undocumented Windows 11 COM APIs (IVirtualDesktopManagerInternal, IVirtualDesktop)
-│   ├── VirtualDesktopService.cs# Virtual desktop enumeration, current desktop tracking, and preloading
-│   ├── ConfigManager.cs        # Settings persistence (%APPDATA%\FluxDesk\config.json) & Windows Run autostart
-│   ├── WallpaperRotator.cs     # Slideshow engine, image pool scanner, and rotation timer
-│   ├── WallpaperEngineGuard.cs # Detects Wallpaper Engine and resolves conflict states
-│   ├── TrayIconManager.cs      # System tray icon, custom GDI+ icon rendering, and tray menu
-│   ├── MainWindow.cs           # Fluent dark mode WPF interface with live desktop preview cards
-│   └── App.cs                  # Entry point, single-instance mutex, and application lifecycle
-├── build.bat                   # Instant 1-second build script using native Windows csc.exe
-├── FluxDesk.exe                # Pre-compiled standalone executable
-├── LICENSE                     # MIT License
-└── README.md                   # Documentation
+├── desktop-app/              # Standalone C# .NET Desktop Application
+│   ├── src/                  # Source files (WPF, Win32 COM, Slideshow, Config)
+│   ├── build.bat             # 1-second standalone build script using csc.exe
+│   ├── FluxDesk.exe          # Pre-compiled standalone executable (47 KB)
+│   └── LICENSE               # MIT License
+│
+├── windhawk-mod/             # In-Process C++ Windhawk Mod for explorer.exe
+│   ├── FluxDesk.cpp          # Complete Windhawk mod source code
+│   ├── README.md             # Windhawk mod setup & compilation guide
+│   └── LICENSE               # MIT License
+│
+├── LICENSE                   # Root MIT License covering the entire repository
+└── README.md                 # Project Overview & Architecture Guide
 ```
+
+---
+
+## ⚖️ Architecture Comparison
+
+| Feature | Desktop Application (`/desktop-app`) | Windhawk Mod (`/windhawk-mod`) |
+| :--- | :--- | :--- |
+| **Language** | C# (WPF / .NET Framework 4.8) | C++ (MinGW / Clang via Windhawk) |
+| **Execution Mode** | Standalone `.exe` in user space | Injected DLL inside `explorer.exe` |
+| **UI** | Interactive Fluent Dark Window + Tray | Native Windhawk Mod Settings UI |
+| **Event Detection** | COM service query & timer polling | Native `IVirtualDesktopNotification` sink & `Wh_SetFunctionHook` |
+| **Memory Footprint** | ~35 MB | **< 1 MB** |
+| **Best For** | Visual control, preview cards, easy launch | Zero-overhead, permanent Windows integration |
 
 ---
 
 ## 🚀 Quick Start
 
-### Running FluxDesk
-1. Double-click `FluxDesk.exe` to launch the dashboard.
-2. FluxDesk will automatically detect your active virtual desktops and your current Windows background wallpaper folder (e.g. `CyberPunk HQ`).
-3. Distinct wallpapers are immediately preloaded across all virtual desktops.
-4. Close or minimize the window (`✕` or `_`) to send FluxDesk to the system tray.
-
-### Preloading & Touchpad Gesture Verification
-- Perform a **4-finger horizontal swipe** on your laptop trackpad to switch between virtual desktops.
-- Because each desktop's wallpaper was pre-registered into Windows DWM by FluxDesk, the wallpaper slides smoothly in real time with **zero black flash or delay**.
-
----
-
-## ⚙️ Wallpaper Engine Notice
-
-If you use **Wallpaper Engine**:
-- Wallpaper Engine renders live backgrounds only to the currently focused desktop surface. During a Windows 11 4-finger swipe, Windows DWM animates the underlying native desktop wallpapers.
-- To prevent Wallpaper Engine from overriding your distinct native wallpapers with a temporary static snapshot:
-  1. Open **Wallpaper Engine Settings**.
-  2. Go to the **General** tab under the **Windows** section.
-  3. Uncheck **`Override wallpaper image`**.
-- This allows Wallpaper Engine to run its live wallpaper on the active desktop while FluxDesk guarantees that every other virtual desktop has a preloaded background ready for instant touchpad switching.
-
----
-
-## 🔨 Building from Source
-
-FluxDesk compiles directly using Windows' built-in .NET Framework compiler without needing Visual Studio or .NET SDK:
-
+### Option A: Running the Desktop Application
 ```cmd
+cd desktop-app
 build.bat
+FluxDesk.exe
 ```
 
-Or via PowerShell:
-```powershell
-& .\build.bat
-```
+### Option B: Using the Windhawk Mod
+1. Open [Windhawk](https://windhawk.net/).
+2. Enable Developer mode (`⋮` -> Advanced).
+3. Click **"New mod"**, paste the code from [`windhawk-mod/FluxDesk.cpp`](windhawk-mod/FluxDesk.cpp), and click **"Compile Mod"**.
+4. Configure your wallpapers directly in Windhawk's Settings tab.
 
 ---
 
-## 📜 License
+## 📜 Licensing
 
-MIT License. Copyright (c) 2026 Dev-StudioCode.
+Both the desktop application and the Windhawk mod are licensed under the **[MIT License](LICENSE)**.
+- **For Desktop App**: Allows unrestricted usage, sharing, and portfolio demonstration (Project FluxDesk).
+- **For Windhawk Mod**: Complies with the official [Windhawk Mods Repository](https://github.com/ramensoftware/windhawk-mods) requirement that all community submissions use the MIT License.
