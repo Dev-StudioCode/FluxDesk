@@ -1,0 +1,7 @@
+*.log
+crash.log
+*.tmp
+*.suo
+*.user
+bin/
+obj/
