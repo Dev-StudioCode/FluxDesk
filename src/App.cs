@@ -39,87 +39,96 @@ namespace FluxDesk
             }
             catch (Exception ex)
             {
-                File.WriteAllText("crash.log", ex.ToString());
+                string logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "FluxDesk", "error.log");
+                try { File.WriteAllText(logPath, ex.ToString()); } catch { }
                 MessageBox.Show("FluxDesk Startup Error: " + ex.Message, "FluxDesk Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         public void Execute(string[] args)
         {
-            // 1. Initialize services
-            _vdService = new VirtualDesktopService();
-            _config = ConfigManager.Load();
-            _rotator = new WallpaperRotator(_vdService, _config);
+            try
+            {
+                // 1. Initialize services
+                _vdService = new VirtualDesktopService();
+                _config = ConfigManager.Load();
+                _rotator = new WallpaperRotator(_vdService, _config);
 
-            // 2. Initialize System Tray
-            _trayManager = new TrayIconManager(
-                onOpenWindow: () =>
-                {
-                    Dispatcher.Invoke(new Action(() =>
+                // 2. Initialize System Tray
+                _trayManager = new TrayIconManager(
+                    onOpenWindow: () =>
                     {
-                        if (_mainWindow == null)
+                        Dispatcher.Invoke(new Action(() =>
                         {
-                            _mainWindow = new MainWindow(_vdService, _rotator, _config, _trayManager);
+                            if (_mainWindow == null)
+                            {
+                                _mainWindow = new MainWindow(_vdService, _rotator, _config, _trayManager);
+                            }
+                            _mainWindow.Show();
+                            _mainWindow.WindowState = WindowState.Normal;
+                            _mainWindow.Activate();
+                            _mainWindow.RefreshAll();
+                        }));
+                    },
+                    onRotateNow: () =>
+                    {
+                        _rotator.RotateAll();
+                        _rotator.ResetTimer();
+                    },
+                    onToggleShuffle: () =>
+                    {
+                        _rotator.SetShuffle(!_config.Shuffle);
+                        _rotator.RotateAll();
+                    },
+                    onTogglePause: () =>
+                    {
+                        if (_config.IntervalMinutes > 0)
+                        {
+                            _rotator.SetInterval(0);
                         }
-                        _mainWindow.Show();
-                        _mainWindow.WindowState = WindowState.Normal;
-                        _mainWindow.Activate();
-                        _mainWindow.RefreshAll();
-                    }));
-                },
-                onRotateNow: () =>
-                {
-                    _rotator.RotateAll();
-                    _rotator.ResetTimer();
-                },
-                onToggleShuffle: () =>
-                {
-                    _rotator.SetShuffle(!_config.Shuffle);
-                    _rotator.RotateAll();
-                },
-                onTogglePause: () =>
-                {
-                    if (_config.IntervalMinutes > 0)
+                        else
+                        {
+                            _rotator.SetInterval(10);
+                        }
+                    },
+                    onExit: () =>
                     {
-                        _rotator.SetInterval(0);
+                        Dispatcher.Invoke(new Action(() =>
+                        {
+                            if (_trayManager != null) _trayManager.Dispose();
+                            ConfigManager.Save(_config);
+                            Shutdown();
+                        }));
                     }
-                    else
-                    {
-                        _rotator.SetInterval(10);
-                    }
-                },
-                onExit: () =>
+                );
+
+                // 3. Immediately assign and preload distinct wallpapers for every virtual desktop!
+                _rotator.RotateAll();
+                _rotator.Start();
+
+                // 4. Create Main Window
+                _mainWindow = new MainWindow(_vdService, _rotator, _config, _trayManager);
+
+                // 5. Check arguments
+                bool startMinimized = args != null && args.Any(a => a.Equals("--minimized", StringComparison.OrdinalIgnoreCase));
+
+                if (!startMinimized)
                 {
-                    Dispatcher.Invoke(new Action(() =>
-                    {
-                        if (_trayManager != null) _trayManager.Dispose();
-                        ConfigManager.Save(_config);
-                        Shutdown();
-                    }));
+                    _mainWindow.Show();
+                    _mainWindow.Activate();
                 }
-            );
+                else
+                {
+                    _trayManager.ShowNotification("FluxDesk Active", "FluxDesk is running in the background. All virtual desktop wallpapers are preloaded.");
+                }
 
-            // 3. Create Main Window
-            _mainWindow = new MainWindow(_vdService, _rotator, _config, _trayManager);
-
-            // 4. Start rotation & preloading
-            _rotator.Start();
-            _rotator.EnsureAllDesktopsAssigned();
-
-            // 5. Check arguments
-            bool startMinimized = args != null && args.Any(a => a.Equals("--minimized", StringComparison.OrdinalIgnoreCase));
-
-            if (!startMinimized)
-            {
-                _mainWindow.Show();
-                _mainWindow.Activate();
+                Run();
             }
-            else
+            catch (Exception ex)
             {
-                _trayManager.ShowNotification("FluxDesk Active", "FluxDesk is running in the background. All virtual desktop wallpapers are preloaded.");
+                string logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "FluxDesk", "error.log");
+                try { File.WriteAllText(logPath, ex.ToString()); } catch { }
             }
-
-            Run(_mainWindow);
         }
 
         protected override void OnExit(ExitEventArgs e)
