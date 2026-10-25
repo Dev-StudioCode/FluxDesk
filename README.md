@@ -22,7 +22,7 @@ FluxDesk/
 │   └── LICENSE               # MIT License
 │
 ├── windhawk-mod/             # In-Process C++ Windhawk Mod for explorer.exe
-│   ├── FluxDesk.cpp          # Complete Windhawk mod source code
+│   ├── virtual-desktop-wallpaper-switch.cpp  # Complete Windhawk mod source code
 │   ├── README.md             # Windhawk mod setup & compilation guide
 │   └── LICENSE               # MIT License
 │
@@ -57,7 +57,7 @@ FluxDesk.exe
 ### Option B: Using the Windhawk Mod
 1. Open [Windhawk](https://windhawk.net/).
 2. Enable Developer mode (`⋮` -> Advanced).
-3. Click **"New mod"**, paste the code from [`windhawk-mod/FluxDesk.cpp`](windhawk-mod/FluxDesk.cpp), and click **"Compile Mod"**.
+3. Click **"New mod"**, paste the code from [`windhawk-mod/virtual-desktop-wallpaper-switch.cpp`](windhawk-mod/virtual-desktop-wallpaper-switch.cpp), and click **"Compile Mod"**.
 4. Configure your wallpapers directly in Windhawk's Settings tab.
 
 ---

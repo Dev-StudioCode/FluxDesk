@@ -22,7 +22,7 @@ Unlike external desktop applications that must poll or run continuous background
 
 ## 📁 File Structure
 
-- **`FluxDesk.cpp`**: Primary single-file Windhawk mod source code containing the official metadata block, settings schema, COM declarations, notification listener, and lifecycle hooks (`Wh_ModInit`, `Wh_ModSettingsChanged`, `Wh_ModUninit`).
+- **`virtual-desktop-wallpaper-switch.cpp`**: Primary single-file Windhawk mod source code containing the official metadata block, settings schema, COM declarations, notification listener, and lifecycle hooks (`Wh_ModInit`, `Wh_ModSettingsChanged`, `Wh_ModUninit`).
 - **`LICENSE`**: MIT License covering this mod for the official Windhawk mod repository.
 
 ---
@@ -33,7 +33,7 @@ Unlike external desktop applications that must poll or run continuous background
 2. Open the Windhawk application window.
 3. Click the three dots (`⋮`) in the top right and select **"Developer channel"** / **"Advanced"** to enable mod development mode.
 4. Click **"New mod"** in the top navigation bar.
-5. In the mod source editor, replace all default code with the contents of [`FluxDesk.cpp`](FluxDesk.cpp).
+5. In the mod source editor, replace all default code with the contents of [`virtual-desktop-wallpaper-switch.cpp`](virtual-desktop-wallpaper-switch.cpp).
 6. Click **"Compile Mod"** (or press `Ctrl+S`).
 7. Windhawk compiles the C++ code using its bundled MinGW/Clang toolchain and injects it directly into `explorer.exe`.
 8. Open the mod's **Settings** tab in Windhawk to configure your wallpaper folder or per-desktop images!
