@@ -1,12 +1,13 @@
 // ==WindhawkMod==
 // @id              virtual-desktop-wallpaper-switch
 // @name            Virtual Desktop Wallpaper Switch
-// @description     A Windhawk mod to set unique backgrounds for each virtual
-// desktop. (Project FluxDesk)
-// @version         1.0
-// @author          [Insert My Name/Handle]
-// @github          https://github.com/[my-username]/FluxDesk
+// @description     A Windhawk mod to set unique backgrounds for each virtual desktop. (Project FluxDesk)
+// @version         1.0.0
+// @author          Dev-StudioCode
+// @github          https://github.com/Dev-StudioCode
 // @include         explorer.exe
+// @architecture    x86-64
+// @compilerOptions -lole32 -loleaut32 -lshlwapi
 // @license         MIT
 // ==/WindhawkMod==
 
@@ -14,32 +15,19 @@
 /*
 # ⚡ Virtual Desktop Wallpaper Switch (Project FluxDesk)
 
-A high-performance Windhawk mod injected directly into **`explorer.exe`** that
-assigns, preloads, and transitions distinct wallpapers across all Windows 11
-virtual desktops.
+A high-performance Windhawk mod injected directly into **`explorer.exe`** that assigns, preloads, and transitions distinct wallpapers across all Windows 11 virtual desktops.
 
 ### 🌟 Key Benefits Over External Desktop Apps
-- **Zero-Latency In-Process Execution**: Runs inside Windows Explorer itself; no
-background `.exe` process polling or running separate message loops.
-- **Instant Touchpad Gesture Preloading**: Uses undocumented internal COM
-interfaces (`IVirtualDesktopManagerInternal::SetDesktopWallpaper`) to register
-wallpapers directly into Desktop Window Manager (DWM). When performing a
-**4-finger swipe**, transitions are buttery-smooth with **zero black flicker**.
-- **Native Event Sinks**: Hooks into shell notifications
-(`IVirtualDesktopNotificationService`) and intercepts virtual desktop switch
-calls without requiring external global hooks or polling timers.
-- **Configurable**: Define custom wallpaper folders or assign explicit
-wallpapers per virtual desktop directly from the Windhawk settings panel.
+- **Zero-Latency In-Process Execution**: Runs inside Windows Explorer itself; no background `.exe` process polling or running separate message loops.
+- **Instant Touchpad Gesture Preloading**: Uses undocumented internal COM interfaces (`IVirtualDesktopManagerInternal::SetDesktopWallpaper`) to register wallpapers directly into Desktop Window Manager (DWM). When performing a **4-finger swipe**, transitions are buttery-smooth with **zero black flicker**.
+- **Native Event Sinks**: Hooks into shell notifications (`IVirtualDesktopNotificationService`) and intercepts virtual desktop switch calls without requiring external global hooks or polling timers.
+- **Configurable**: Define custom wallpaper folders or assign explicit wallpapers per virtual desktop directly from the Windhawk settings panel.
 
 ### ⚙️ How It Works
-1. When loaded into `explorer.exe`, `Wh_ModInit` locates the Windows Immersive
-Shell service provider.
-2. It queries `IVirtualDesktopManagerInternal` and
-`IVirtualDesktopNotificationService`.
+1. When loaded into `explorer.exe`, `Wh_ModInit` locates the Windows Immersive Shell service provider.
+2. It queries `IVirtualDesktopManagerInternal` and `IVirtualDesktopNotificationService`.
 3. It preloads each virtual desktop with its designated wallpaper in DWM.
-4. When you switch desktops (via 4-finger trackpad swipe, `Win+Ctrl+Left/Right`,
-or Task View), the notification callback and hooked switch methods automatically
-guarantee the correct wallpaper is active.
+4. When you switch desktops (via 4-finger trackpad swipe, `Win+Ctrl+Left/Right`, or Task View), the notification callback and hooked switch methods automatically guarantee the correct wallpaper is active.
 */
 // ==/WindhawkModReadme==
 
@@ -47,12 +35,10 @@ guarantee the correct wallpaper is active.
 /*
 - wallpaperFolder: ""
   $name: Wallpaper Folder
-  $description: Path to a folder containing wallpapers (.jpg, .png, .bmp,
-.webp). Images will be assigned across your virtual desktops.
+  $description: Path to a folder containing wallpapers (.jpg, .png, .bmp, .webp). Images will be assigned across your virtual desktops.
 - desktop1Wallpaper: ""
   $name: Desktop 1 Wallpaper
-  $description: Specific wallpaper path for Virtual Desktop 1 (overrides folder
-mode if set).
+  $description: Specific wallpaper path for Virtual Desktop 1 (overrides folder mode if set).
 - desktop2Wallpaper: ""
   $name: Desktop 2 Wallpaper
   $description: Specific wallpaper path for Virtual Desktop 2.
@@ -67,12 +53,10 @@ mode if set).
   $description: Randomize the order of wallpapers assigned from the folder.
 - enablePreloading: true
   $name: Preload Wallpapers in DWM
-  $description: Pre-registers wallpapers for all desktops so 4-finger touchpad
-swipes have zero black/blank frame latency.
+  $description: Pre-registers wallpapers for all desktops so 4-finger touchpad swipes have zero black/blank frame latency.
 - fallbackDesktopWallpaperAPI: true
   $name: Shell Wallpaper Fallback
-  $description: Also updates active wallpaper via IDesktopWallpaper and
-SystemParametersInfo on desktop switch.
+  $description: Also updates active wallpaper via IDesktopWallpaper and SystemParametersInfo on desktop switch.
 */
 // ==/WindhawkModSettings==
 
@@ -816,9 +800,17 @@ BOOL Wh_ModInit() {
   return TRUE;
 }
 
-void Wh_ModSettingsChanged() {
+void Wh_ModAfterInit() {
+  Wh_Log(L"Wh_ModAfterInit: Mod loaded and active in explorer.exe");
+}
+
+BOOL Wh_ModSettingsChanged(BOOL *bReload) {
   Wh_Log(L"Mod settings changed callback received.");
   LoadSettings();
+  if (bReload) {
+    *bReload = FALSE;
+  }
+  return TRUE;
 }
 
 void Wh_ModUninit() {

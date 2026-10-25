@@ -11,8 +11,9 @@ extern "C" {
 
 // Windhawk Mod Lifecycle Callbacks
 BOOL Wh_ModInit(void);
+void Wh_ModAfterInit(void);
 void Wh_ModUninit(void);
-void Wh_ModSettingsChanged(void);
+BOOL Wh_ModSettingsChanged(BOOL *bReload);
 
 // Logging
 void Wh_Log(PCWSTR format, ...);
