@@ -59,15 +59,28 @@ preloads, and transitions distinct wallpapers across all Windows 11 virtual desk
 */
 // ==/WindhawkModSettings==
 
-#include <windhawk_api.h>
 #include <windows.h>
+#include <objbase.h>
 #include <shlobj.h>
 #include <shobjidl.h>
+#include <initguid.h>
+
+#if __has_include(<windhawk_api.h>)
+#include <windhawk_api.h>
+#elif __has_include("windhawk_api.h")
+#include "windhawk_api.h"
+#endif
+
 #include <vector>
 #include <string>
 #include <unordered_map>
 #include <algorithm>
 #include <random>
+
+// Ensure MIDL_INTERFACE is available on all compilers
+#ifndef MIDL_INTERFACE
+#define MIDL_INTERFACE(x) struct
+#endif
 
 // ============================================================================
 // Undocumented Windows Shell COM Definitions & GUIDs
@@ -138,9 +151,9 @@ static const IID IID_IDesktopWallpaper_Local = {
 // WinRT String Function Types (Dynamic binding to prevent linking hurdles)
 // ============================================================================
 typedef struct HSTRING__* HSTRING;
-typedef HRESULT (WINAPI *WindowsCreateString_t)(PCNZWCH sourceString, UINT32 length, HSTRING *string);
+typedef HRESULT (WINAPI *WindowsCreateString_t)(PCWSTR sourceString, UINT length, HSTRING *string);
 typedef HRESULT (WINAPI *WindowsDeleteString_t)(HSTRING string);
-typedef PCWSTR (WINAPI *WindowsGetStringRawBuffer_t)(HSTRING string, UINT32 *length);
+typedef PCWSTR (WINAPI *WindowsGetStringRawBuffer_t)(HSTRING string, UINT *length);
 
 static WindowsCreateString_t        g_pfnWindowsCreateString = nullptr;
 static WindowsDeleteString_t        g_pfnWindowsDeleteString = nullptr;
@@ -163,7 +176,7 @@ private:
 public:
     ScopedHString(PCWSTR str) {
         if (str && g_pfnWindowsCreateString) {
-            g_pfnWindowsCreateString(str, (UINT32)wcslen(str), &m_hstring);
+            g_pfnWindowsCreateString(str, (UINT)wcslen(str), &m_hstring);
         }
     }
     ~ScopedHString() {
