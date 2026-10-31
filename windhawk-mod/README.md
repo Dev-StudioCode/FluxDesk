@@ -20,15 +20,15 @@
 
 ---
 
-## 📌 Executive Summary
+## Executive Summary
 
-Under Windows 11, the **Desktop Window Manager (DWM)** performs real-time interactive sliding animations when switching virtual workspaces via trackpad gestures (such as 3- or 4-finger horizontal swipes). However, Windows does not natively support per-desktop slideshows, and third-party tools that set wallpapers *out-of-process* introduce noticeable latency, causing incoming desktops to display an unrendered **black or blank screen** during the swipe transition.
+Under Windows 11, the **Desktop Window Manager (DWM)** performs real-time interactive sliding animations when switching virtual workspaces via trackpad gestures (such as 3- or 4-finger horizontal swipes). However, Windows does not natively support per-desktop slideshows, and third-party tools that set wallpapers out-of-process introduce noticeable latency, causing incoming desktops to display an unrendered **black or blank screen** during the swipe transition.
 
 **Virtual Desktop Wallpaper Switch** solves this at the operating system level. By injecting directly into `explorer.exe` via [Windhawk](https://windhawk.net/), the mod hooks internal Shell COM interfaces (`IVirtualDesktopNotificationService` and `IVirtualDesktopManagerInternal`). It preloads and caches each desktop’s unique wallpaper texture directly into memory, delivering seamless, instantaneous transitions at full display refresh rate (60Hz / 120Hz / 144Hz+) with **zero latency** and **less than 1 MB of RAM overhead**.
 
 ---
 
-## ⚡ Performance & Architectural Comparison
+## Performance & Architectural Comparison
 
 | Dimension | External Desktop App (`/desktop-app`) | Windhawk In-Process Mod (`/windhawk-mod`) |
 | :--- | :--- | :--- |
@@ -41,7 +41,7 @@ Under Windows 11, the **Desktop Window Manager (DWM)** performs real-time intera
 
 ---
 
-## 🏗️ Architecture & Internal Windows APIs
+## Architecture & Internal Windows APIs
 
 The mod operates natively inside the shell's address space without requiring reverse-engineered memory hacks:
 
@@ -62,7 +62,8 @@ The mod operates natively inside the shell's address space without requiring rev
       └── Wh_SetFunctionHook(SwitchDesktopWithAnimation)            --> Pre-transition caching hook
 ```
 
-### Core Shell Interfaces Used:
+### Core Shell Interfaces Used
+
 - **`CLSID_ImmersiveShell`** (`{C2F03A33-21F5-47FA-B4BB-156362A2F239}`): Root provider for Windows Immersive Shell services.
 - **`IVirtualDesktopManagerInternal`** (`{53F5CA0B-158F-4124-900C-057158060B27}`): Windows 11 internal manager providing direct per-desktop wallpaper assignment and desktop enumeration.
 - **`IVirtualDesktopNotificationService`** (`{0CD45E71-D927-4F15-8B0A-8FEF525337BF}`): Low-overhead shell notification bus that alerts the mod the exact millisecond a virtual desktop switch begins.
@@ -70,7 +71,7 @@ The mod operates natively inside the shell's address space without requiring rev
 
 ---
 
-## 📦 Directory Structure
+## Directory Structure
 
 - **[`virtual-desktop-wallpaper-switch.cpp`](virtual-desktop-wallpaper-switch.cpp)**: Complete, standalone Windhawk C++ mod source file containing official marketplace metadata, settings definitions, COM declarations, event sink implementation, and Windhawk lifecycle hooks (`Wh_ModInit`, `Wh_ModSettingsChanged`, `Wh_ModUninit`).
 - **[`windhawk_api.h`](windhawk_api.h)**: Reference Windhawk API declarations for local inspection and tooling support.
@@ -78,19 +79,19 @@ The mod operates natively inside the shell's address space without requiring rev
 
 ---
 
-## 🛠️ Installation & Setup via Windhawk
+## Installation & Setup via Windhawk
 
 1. **Install Windhawk**: Download and install [Windhawk](https://windhawk.net/) (version 1.4 or later).
 2. **Enable Developer Mode**:
    - Open Windhawk settings.
-   - Click the three-dots menu (`⋮`) in the top-right corner $\rightarrow$ choose **Advanced Settings**.
+   - Click the options menu (`...`) in the top-right corner, then choose **Advanced Settings**.
    - Enable the **Developer channel / Mod editing mode**.
 3. **Add the Mod**:
    - Click the **"New mod"** button on the top navigation bar.
    - Replace the default template code with the entire content of [`virtual-desktop-wallpaper-switch.cpp`](virtual-desktop-wallpaper-switch.cpp).
 4. **Compile & Inject**:
    - Click **"Compile Mod"** (or press <kbd>Ctrl</kbd> + <kbd>S</kbd>).
-   - Windhawk will compile the C++ source using its built-in toolchain and immediately inject the module into `explorer.exe`.
+   - Windhawk compiles the C++ source using its built-in toolchain and injects the module into `explorer.exe`.
 5. **Configure Settings**:
    - Navigate to the mod's **Settings** tab within Windhawk.
    - Enter your preferred wallpaper folder path (e.g., `C:\Users\username\Pictures\Wallpapers`).
@@ -98,7 +99,7 @@ The mod operates natively inside the shell's address space without requiring rev
 
 ---
 
-## ⚙️ Configuration Schema
+## Configuration Schema
 
 The mod exposes native configuration options within the Windhawk UI:
 
@@ -111,18 +112,18 @@ The mod exposes native configuration options within the Windhawk UI:
 
 ---
 
-## 🛡️ Wallpaper Engine Compatibility Note
+## Wallpaper Engine Compatibility Note
 
 If running alongside **Wallpaper Engine**:
 - Wallpaper Engine renders exclusively to the active foreground desktop layer. During a 4-finger touchpad swipe, Windows DWM animates the underlying native shell wallpapers.
 - To prevent Wallpaper Engine from overriding native virtual desktop textures:
   1. Open **Wallpaper Engine Settings**.
-  2. Navigate to **General** $\rightarrow$ **Windows**.
+  2. Navigate to **General** -> **Windows**.
   3. Uncheck **`Override wallpaper image`**.
 - This enables Wallpaper Engine on your active workspace while allowing this mod to keep all adjacent virtual desktop backgrounds permanently pre-rendered and tear-free.
 
 ---
 
-## 📄 License
+## License
 
 This mod is licensed under the **MIT License**. It complies with the standard licensing policy of the [official Windhawk Mods Repository](https://github.com/ramensoftware/windhawk-mods).

@@ -19,7 +19,7 @@
 
 ---
 
-## 📌 Overview
+## Overview
 
 Under Windows 11, the **Desktop Window Manager (DWM)** performs real-time interactive sliding animations when switching virtual workspaces via trackpad gestures (such as 3- or 4-finger horizontal swipes). However, when wallpapers are applied globally or switched *after* the transition event occurs, the incoming virtual desktop displays an unrendered **black or blank screen** during the swipe.
 
@@ -27,12 +27,12 @@ Under Windows 11, the **Desktop Window Manager (DWM)** performs real-time intera
 
 This repository provides two distinct, production-ready implementations tailored to different deployment needs:
 
-1. 🖥️ **[`/desktop-app`](desktop-app/)**: Standalone, zero-dependency C# / WPF desktop application featuring an interactive Fluent dark dashboard, real-time desktop preview cards, system tray integration, and an automatic slideshow engine.
-2. 🦅 **[`/windhawk-mod`](windhawk-mod/)**: High-performance native C++ mod injected directly into `explorer.exe` via [Windhawk](https://windhawk.net/) for zero RAM overhead (< 1 MB), sub-millisecond in-process event handling, and permanent shell integration.
+1. **[`/desktop-app`](desktop-app/)**: Standalone, zero-dependency C# / WPF desktop application featuring an interactive Fluent dark dashboard, real-time desktop preview cards, system tray integration, and an automatic slideshow engine.
+2. **[`/windhawk-mod`](windhawk-mod/)**: High-performance native C++ mod injected directly into `explorer.exe` via [Windhawk](https://windhawk.net/) for zero RAM overhead (< 1 MB), sub-millisecond in-process event handling, and permanent shell integration.
 
 ---
 
-## 🗂️ Repository Architecture
+## Repository Architecture
 
 ```
 FluxDesk/
@@ -55,7 +55,7 @@ FluxDesk/
 
 ---
 
-## ⚖️ Architectural Comparison
+## Architectural Comparison
 
 | Dimension | Desktop Application (`/desktop-app`) | Windhawk Mod (`/windhawk-mod`) |
 | :--- | :--- | :--- |
@@ -69,7 +69,7 @@ FluxDesk/
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Option A: Running the Desktop Application
 The desktop app requires no installation or external runtimes:
@@ -81,25 +81,25 @@ FluxDesk.exe
 
 ### Option B: Installing the Windhawk Mod
 1. Install [Windhawk](https://windhawk.net/) (v1.4+).
-2. Enable Developer mode (`⋮` menu $\rightarrow$ **Advanced Settings** $\rightarrow$ Developer channel).
+2. Enable Developer mode (`Options` menu -> **Advanced Settings** -> Developer channel).
 3. Click **"New mod"**, paste the code from [`windhawk-mod/virtual-desktop-wallpaper-switch.cpp`](windhawk-mod/virtual-desktop-wallpaper-switch.cpp), and click **"Compile Mod"**.
 4. Configure your wallpapers and slideshow options directly in the mod's **Settings** tab.
 
 ---
 
-## 🛡️ Wallpaper Engine Compatibility
+## Wallpaper Engine Compatibility
 
 If you run **Wallpaper Engine** alongside FluxDesk:
 - Wallpaper Engine renders exclusively to the active foreground desktop layer. During a 4-finger touchpad swipe, Windows DWM animates the underlying native shell wallpapers.
 - To prevent Wallpaper Engine from overriding native virtual desktop textures:
   1. Open **Wallpaper Engine Settings**.
-  2. Navigate to **General** $\rightarrow$ **Windows**.
+  2. Navigate to **General** -> **Windows**.
   3. Uncheck **`Override wallpaper image`**.
 - This enables Wallpaper Engine on your active workspace while allowing FluxDesk to keep all adjacent virtual desktop backgrounds permanently pre-rendered and tear-free.
 
 ---
 
-## 📜 Licensing
+## Licensing
 
 Both implementations are licensed under the **[MIT License](LICENSE)**:
 - **Desktop Application**: Allows unrestricted commercial and personal usage, modification, and portfolio demonstration.
