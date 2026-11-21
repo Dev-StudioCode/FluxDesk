@@ -5,3 +5,6 @@ crash.log
 *.user
 bin/
 obj/
+review.md
+*.o
+*.dll
