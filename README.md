@@ -6,8 +6,14 @@
 [![Platform: Windows 11](https://img.shields.io/badge/Platform-Windows%2011%20(21H2--25H2)-0078d4?style=flat-square&logo=windows11&logoColor=white)](https://microsoft.com)
 [![Implementations](https://img.shields.io/badge/Implementations-Desktop%20App%20%7C%20Windhawk%20Mod-success?style=flat-square)](https://github.com)
 [![Languages](https://img.shields.io/badge/Languages-C%23%20%7C%20C%2B%2B20-blue?style=flat-square)](https://github.com)
-[![Windhawk Ready](https://img.shields.io/badge/Windhawk-Ready-7952b3?style=flat-square&logo=visual-studio-code&logoColor=white)](https://windhawk.net/)
+[![Windhawk Users](https://windhawk-badges.luizbizzio.com/mod/virtual-desktop-wallpaper-switch/users)](https://windhawk.net/mods/virtual-desktop-wallpaper-switch)
+[![Windhawk Rating](https://windhawk-badges.luizbizzio.com/mod/virtual-desktop-wallpaper-switch/rating)](https://windhawk.net/mods/virtual-desktop-wallpaper-switch)
+[![Windhawk Version](https://windhawk-badges.luizbizzio.com/mod/virtual-desktop-wallpaper-switch/version)](https://windhawk.net/mods/virtual-desktop-wallpaper-switch)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
+
+<br/>
+
+> Published on the Windhawk Marketplace via [ramensoftware/windhawk-mods#7733](https://github.com/ramensoftware/windhawk-mods/pull/7733).
 
 <br/>
 
@@ -44,7 +50,7 @@ FluxDesk/
 │   └── LICENSE               # MIT License
 │
 ├── windhawk-mod/             # In-Process C++ Windhawk Mod for explorer.exe
-│   ├── virtual-desktop-wallpaper-switch.cpp  # Complete Windhawk mod source code
+│   ├── virtual-desktop-wallpaper-switch.wh.cpp  # Complete Windhawk mod source code
 │   ├── windhawk_api.h        # Windhawk API reference header
 │   ├── README.md             # Windhawk mod architecture & compilation guide
 │   └── LICENSE               # MIT License

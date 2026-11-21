@@ -8,7 +8,14 @@
 [![Target Process](https://img.shields.io/badge/Target-explorer.exe-0078d4?style=flat-square&logo=windows&logoColor=white)](https://microsoft.com/windows)
 [![Windows 11 Compatible](https://img.shields.io/badge/OS-Windows%2011%2024H2%2B-00a4ef?style=flat-square&logo=windows11&logoColor=white)](https://microsoft.com)
 [![Language](https://img.shields.io/badge/Language-C%2B%2B20-00599c?style=flat-square&logo=c%2B%2B&logoColor=white)](https://en.cppreference.com/)
+[![Windhawk Users](https://windhawk-badges.luizbizzio.com/mod/virtual-desktop-wallpaper-switch/users)](https://windhawk.net/mods/virtual-desktop-wallpaper-switch)
+[![Windhawk Rating](https://windhawk-badges.luizbizzio.com/mod/virtual-desktop-wallpaper-switch/rating)](https://windhawk.net/mods/virtual-desktop-wallpaper-switch)
+[![Windhawk Version](https://windhawk-badges.luizbizzio.com/mod/virtual-desktop-wallpaper-switch/version)](https://windhawk.net/mods/virtual-desktop-wallpaper-switch)
 [![License: MIT](https://img.shields.io/badge/License-MIT-success?style=flat-square)](LICENSE)
+
+<br/>
+
+> Published on the Windhawk Marketplace via [ramensoftware/windhawk-mods#7733](https://github.com/ramensoftware/windhawk-mods/pull/7733).
 
 <br/>
 
