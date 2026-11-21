@@ -204,7 +204,7 @@ namespace FluxDesk
                 Margin = new Thickness(0, 0, 16, 0)
             };
 
-            Button btnMinimize = CreateTitleButton("—", "Minimize to Taskbar");
+            Button btnMinimize = CreateTitleButton("-", "Minimize to Taskbar");
             btnMinimize.Click += (s, e) => WindowState = WindowState.Minimized;
             rightPanel.Children.Add(btnMinimize);
 
