@@ -1,129 +1,73 @@
 <div align="center">
 
 # Virtual Desktop Wallpaper Switch
-### In-Process Wallpaper Preloader & Virtual Desktop Synchronization Engine for Windows 11
-**Project FluxDesk • Windhawk Native Mod Edition**
+### Native Virtual Desktop Wallpaper Coordination & Preloading Engine for Windows 11 (24H2+)
+**Project FluxDesk - Windhawk Native Mod Edition**
 
 [![Windhawk Engine](https://img.shields.io/badge/Engine-Windhawk%20v1.4%2B-7952b3?style=flat-square&logo=visual-studio-code&logoColor=white)](https://windhawk.net/)
 [![Target Process](https://img.shields.io/badge/Target-explorer.exe-0078d4?style=flat-square&logo=windows&logoColor=white)](https://microsoft.com/windows)
-[![Windows 11 Compatible](https://img.shields.io/badge/OS-Windows%2011%20(21H2--25H2)-00a4ef?style=flat-square&logo=windows11&logoColor=white)](https://microsoft.com)
+[![Windows 11 Compatible](https://img.shields.io/badge/OS-Windows%2011%2024H2%2B-00a4ef?style=flat-square&logo=windows11&logoColor=white)](https://microsoft.com)
 [![Language](https://img.shields.io/badge/Language-C%2B%2B20-00599c?style=flat-square&logo=c%2B%2B&logoColor=white)](https://en.cppreference.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-success?style=flat-square)](LICENSE)
 
 <br/>
 
 <p align="center">
-  <b>A native Windows Shell mod engineered to eliminate black screen flicker during 3- and 4-finger touchpad transitions by pre-rendering and caching distinct wallpapers directly inside Desktop Window Manager (DWM).</b>
+  <b>A lightweight Windhawk mod for Windows 11 (24H2+) that assigns distinct wallpapers across virtual desktops, preloads them for smooth touchpad transitions, and backs up original wallpapers in persistent storage.</b>
 </p>
 
 </div>
 
 ---
 
-## Executive Summary
+## Overview
 
-Under Windows 11, the **Desktop Window Manager (DWM)** performs real-time interactive sliding animations when switching virtual workspaces via trackpad gestures (such as 3- or 4-finger horizontal swipes). However, Windows does not natively support per-desktop slideshows, and third-party tools that set wallpapers out-of-process introduce noticeable latency, causing incoming desktops to display an unrendered **black or blank screen** during the swipe transition.
+Under Windows 11 Version 24H2 (Build 26100+), Windows natively supports distinct per-desktop wallpapers through the internal Shell virtual desktop manager (`IVirtualDesktopManagerInternal`). When wallpapers are properly assigned to virtual desktops ahead of time, Windows preloads the desktop surfaces so that touchpad gestures (such as 3- and 4-finger swipes) transition smoothly between workspaces.
 
-**Virtual Desktop Wallpaper Switch** solves this at the operating system level. By injecting directly into `explorer.exe` via [Windhawk](https://windhawk.net/), the mod hooks internal Shell COM interfaces (`IVirtualDesktopNotificationService` and `IVirtualDesktopManagerInternal`). It preloads and caches each desktop’s unique wallpaper texture directly into memory, delivering seamless, instantaneous transitions at full display refresh rate (60Hz / 120Hz / 144Hz+) with **zero latency** and **less than 1 MB of RAM overhead**.
-
----
-
-## Performance & Architectural Comparison
-
-| Dimension | External Desktop App (`/desktop-app`) | Windhawk In-Process Mod (`/windhawk-mod`) |
-| :--- | :--- | :--- |
-| **Execution Domain** | User-space standalone executable (`.exe`) | Injected dynamic module directly inside `explorer.exe` |
-| **Memory Footprint** | ~35 MB (CLR / .NET Framework runtime + WPF) | **< 1 MB** (Zero dedicated processes) |
-| **Switch Latency** | Inter-process COM marshaling (~15–50 ms) | **Sub-millisecond / In-memory zero latency** |
-| **Touchpad Gestures** | Preloaded via external COM calls | **Direct internal Explorer/DWM texture cache** |
-| **Event Detection** | Periodic timer polling & shell hooks | Native COM event sink (`IVirtualDesktopNotification`) |
-| **Lifecycle** | Background system tray process | Managed lifecycle hooks via Windhawk engine |
+**Virtual Desktop Wallpaper Switch** runs inside `explorer.exe` on a dedicated worker thread. It reads images from a configured folder (or explicit per-desktop paths) and assigns them to each virtual desktop. It also listens for desktop creation and destruction events via `IVirtualDesktopNotificationService` to automatically synchronize wallpapers as workspaces change.
 
 ---
 
-## Architecture & Internal Windows APIs
+## Architecture & Storage Management
 
-The mod operates natively inside the shell's address space without requiring reverse-engineered memory hacks:
+### Windows Shell Integration
+The mod communicates with the Windows 11 Immersive Shell via COM:
+* **`CLSID_ImmersiveShell`**: Obtains shell service providers.
+* **`IVirtualDesktopManagerInternal`**: Enumerates virtual desktops (`GetDesktops`) and assigns individual backgrounds (`SetDesktopWallpaper`).
+* **`IVirtualDesktopNotificationService`**: Registers a non-intrusive event sink (`IVirtualDesktopNotification`) to handle desktop creation and deletion dynamically without polling.
 
-```
-[ explorer.exe Process Space ]
- │
- ├── ImmersiveShell (CLSID_ImmersiveShell)
- │    └── IServiceProvider::QueryService()
- │         ├── IVirtualDesktopManagerInternal
- │         │    ├── SetDesktopWallpaper(IVirtualDesktop*, HSTRING)  --> Preloads DWM texture
- │         │    └── GetDesktops(IObjectArray**)                     --> Enumerates workspaces
- │         └── IVirtualDesktopNotificationService
- │              └── Register(IVirtualDesktopNotification*)          --> Real-time event subscription
- │
- └── Windhawk Hook Engine
-      ├── CurrentVirtualDesktopChanged()                            --> Event-driven instant sync
-      ├── VirtualDesktopCreated() / VirtualDesktopDestroyed()       --> Dynamic workspace tracking
-      └── Wh_SetFunctionHook(SwitchDesktopWithAnimation)            --> Pre-transition caching hook
-```
-
-### Core Shell Interfaces Used
-
-- **`CLSID_ImmersiveShell`** (`{C2F03A33-21F5-47FA-B4BB-156362A2F239}`): Root provider for Windows Immersive Shell services.
-- **`IVirtualDesktopManagerInternal`** (`{53F5CA0B-158F-4124-900C-057158060B27}`): Windows 11 internal manager providing direct per-desktop wallpaper assignment and desktop enumeration.
-- **`IVirtualDesktopNotificationService`** (`{0CD45E71-D927-4F15-8B0A-8FEF525337BF}`): Low-overhead shell notification bus that alerts the mod the exact millisecond a virtual desktop switch begins.
-- **`IDesktopWallpaper`** / **`SystemParametersInfoW`**: Shell fallback engine for multi-monitor desktop surface refreshing.
+### System Changes and Persistence
+* **What Windows Stores**: Calling `SetDesktopWallpaper` updates the per-desktop background in Windows. Windows stores these paths in the user registry under:
+  `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\VirtualDesktops\Desktops\{GUID}`
+* **Persistent Backup**: Before overwriting any desktop wallpaper, the mod queries the existing wallpaper path and saves it to Windhawk persistent mod storage, keyed by the desktop's unique GUID (`Wh_SetStringValue`). This ensures the original wallpaper is remembered across Explorer restarts, sign-outs, and system reboots.
+* **Restoration on Unload**: When `restoreOriginalOnUnload` is enabled (default), unloading or disabling the mod restores the backed-up wallpapers to each desktop and removes the backup keys from storage (`Wh_DeleteValue`). If this option is turned off, the assigned wallpapers remain saved in your Windows settings.
+* **Dynamic Workspace Updates**: When a desktop loses its assignment (e.g. settings cleared or reduced), its original wallpaper is restored from storage.
 
 ---
 
-## Directory Structure
+## Configuration Settings
 
-- **[`virtual-desktop-wallpaper-switch.cpp`](virtual-desktop-wallpaper-switch.cpp)**: Complete, standalone Windhawk C++ mod source file containing official marketplace metadata, settings definitions, COM declarations, event sink implementation, and Windhawk lifecycle hooks (`Wh_ModInit`, `Wh_ModSettingsChanged`, `Wh_ModUninit`).
-- **[`windhawk_api.h`](windhawk_api.h)**: Reference Windhawk API declarations for local inspection and tooling support.
-- **[`LICENSE`](LICENSE)**: Official MIT License compliant with the [Windhawk community mod repository](https://github.com/ramensoftware/windhawk-mods).
+The mod provides the following settings in the Windhawk interface:
 
----
-
-## Installation & Setup via Windhawk
-
-1. **Install Windhawk**: Download and install [Windhawk](https://windhawk.net/) (version 1.4 or later).
-2. **Enable Developer Mode**:
-   - Open Windhawk settings.
-   - Click the options menu (`...`) in the top-right corner, then choose **Advanced Settings**.
-   - Enable the **Developer channel / Mod editing mode**.
-3. **Add the Mod**:
-   - Click the **"New mod"** button on the top navigation bar.
-   - Replace the default template code with the entire content of [`virtual-desktop-wallpaper-switch.cpp`](virtual-desktop-wallpaper-switch.cpp).
-4. **Compile & Inject**:
-   - Click **"Compile Mod"** (or press <kbd>Ctrl</kbd> + <kbd>S</kbd>).
-   - Windhawk compiles the C++ source using its built-in toolchain and injects the module into `explorer.exe`.
-5. **Configure Settings**:
-   - Navigate to the mod's **Settings** tab within Windhawk.
-   - Enter your preferred wallpaper folder path (e.g., `C:\Users\username\Pictures\Wallpapers`).
-   - Optionally configure individual static wallpaper paths for each virtual desktop.
-
----
-
-## Configuration Schema
-
-The mod exposes native configuration options within the Windhawk UI:
-
-```yaml
-- Wallpaper Folder: Full path to directory containing images (.jpg, .png, .bmp, .webp)
-- Rotation Interval (Minutes): Automatic slideshow rotation frequency (0 = manual / on-switch only)
-- Shuffle Mode: Distribute distinct randomized images across active desktops
-- Preload All Desktops on Launch: Ensure all background slots are pre-cached immediately upon shell startup
-```
+* **Wallpaper Folder Path (`wallpaperFolder`)**: Full directory path containing `.jpg`, `.jpeg`, `.png`, `.bmp`, or `.webp` image files.
+* **Desktop 1-4 Wallpaper (`desktop1Wallpaper` - `desktop4Wallpaper`)**: Optional static image paths to assign to specific desktop numbers.
+* **Shuffle Folder Wallpapers (`shuffle`)**: Randomizes wallpaper assignments from the folder across active desktops on initialization and settings reloads.
+* **Restore Original Wallpapers on Exit (`restoreOriginalOnUnload`)**: Restores original desktop backgrounds from Windhawk persistent storage when the mod is disabled or unloaded.
 
 ---
 
 ## Wallpaper Engine Compatibility Note
 
 If running alongside **Wallpaper Engine**:
-- Wallpaper Engine renders exclusively to the active foreground desktop layer. During a 4-finger touchpad swipe, Windows DWM animates the underlying native shell wallpapers.
-- To prevent Wallpaper Engine from overriding native virtual desktop textures:
+* Wallpaper Engine renders exclusively to the active foreground desktop layer. During a touchpad swipe, Windows animates the underlying native shell wallpapers.
+* To prevent Wallpaper Engine from overriding native per-desktop backgrounds:
   1. Open **Wallpaper Engine Settings**.
   2. Navigate to **General** -> **Windows**.
   3. Uncheck **`Override wallpaper image`**.
-- This enables Wallpaper Engine on your active workspace while allowing this mod to keep all adjacent virtual desktop backgrounds permanently pre-rendered and tear-free.
+* This allows Wallpaper Engine to animate on your active desktop while Windows maintains distinct backgrounds across adjacent virtual workspaces.
 
 ---
 
 ## License
 
-This mod is licensed under the **MIT License**. It complies with the standard licensing policy of the [official Windhawk Mods Repository](https://github.com/ramensoftware/windhawk-mods).
+This mod is licensed under the **MIT License**.
